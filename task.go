@@ -79,7 +79,13 @@ func main() {
 	if err != nil {
 		log.Fatal("Setup execute environ falied")
 	}
-	for name, task := range taskfile.Tasks {
+	tasks := taskfile.Tasks
+	names, err := getTaskNames()
+	if len(tasks) > 0 {
+		tasks = taskfile.getTask(names)
+	}
+
+	for name, task := range tasks {
 		fmt.Printf("task: \"%v\" started\n", name)
 		for _, cmd := range task.Cmds {
 			opt, err := syntax.NewParser().Parse(strings.NewReader(cmd.Cmd), "")
@@ -89,7 +95,6 @@ func main() {
 			r.Run(ctx, opt)
 		}
 	}
-
 }
 
 func (t *Taskfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -105,6 +110,18 @@ func (t *Taskfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	t.Tasks = tf.Tasks
 
 	return nil
+}
+
+func (t *Taskfile) getTask(names []string) map[string]*Task {
+	tasks := make(map[string]*Task)
+	for _, name := range names {
+		task := t.Tasks[name]
+		if task != nil {
+			tasks[name] = task
+		}
+	}
+
+	return tasks
 }
 
 func (c *Cmd) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -126,4 +143,13 @@ func InitTaskfile(w io.Writer, dir string) error {
 	}
 	fmt.Fprintf(w, "tasks.yaml created in the current directory\n")
 	return nil
+}
+
+func getTaskNames() ([]string, error) {
+	var args []string
+
+	args = pflag.Args()
+	fmt.Printf("args: %v\n", args)
+
+	return args, nil
 }
