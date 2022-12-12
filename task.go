@@ -81,7 +81,7 @@ func main() {
 	}
 	tasks := taskfile.Tasks
 	names, err := getTaskNames()
-	if len(tasks) > 0 {
+	if len(names) > 0 {
 		tasks = taskfile.getTask(names)
 	}
 
